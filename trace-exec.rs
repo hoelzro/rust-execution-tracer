@@ -1,6 +1,12 @@
-use HashSet = core::hashmap::linear::LinearSet;
 use ptrace::word;
 use posix::CouldBeAnError; // needed for impl below
+
+use std::io;
+use std::libc;
+use std::os;
+use std::str;
+use std::sys;
+use HashSet = std::hashmap::HashSet;
 
 mod posix;
 mod ptrace;
@@ -70,12 +76,12 @@ fn resume_trace(child_pid: int) -> TraceResult {
     wrap_result(ptrace::syscall(child_pid))
 }
 
-fn next_trace(callback: &fn(int, TraceEvent) -> bool) -> TraceResult {
+fn next_trace(callback: &fn(int, TraceEvent) -> bool) -> bool {
     loop {
         let result = posix::waitpid(-1, 0);
 
         match result {
-            posix::WaitPidFailure(errno)       => return TraceError(errno),
+            posix::WaitPidFailure(_)           => return false,
             posix::WaitPidSuccess(pid, status) => {
                 if ((status >> 8) & (0x80 | posix::SIGTRAP)) != 0 {
                     match ptrace::get_registers(pid) {
@@ -85,15 +91,12 @@ fn next_trace(callback: &fn(int, TraceEvent) -> bool) -> TraceResult {
                                 arguments  : ( rdi, rsi, rdx, rcx, r8, r9 ),
                             });
                         },
-                        Err(errno) => return TraceError(errno),
+                        Err(_) => return false,
                     }
                 } else {
                     callback(pid, Other);
                 }
-                let result = resume_trace(pid);
-                if result.is_error() {
-                    return wrap_result(result);
-                }
+                resume_trace(pid);
             },
         }
     }
@@ -103,7 +106,7 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
     let mut bytes    = ~[];
     let mut mut_addr = addr as word;
 
-    loop outer: {
+    'outer: loop {
         match ptrace::peektext(pid, mut_addr as *libc::c_void) {
             Err(_)   => break,
             Ok(word) => {
@@ -114,7 +117,7 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
                     // XXX byte order
                     let lsb = (word >> (i * 8)) & 0xFF;
                     if lsb == 0 {
-                        break outer;
+                        break 'outer;
                     }
                     bytes.push(lsb as u8);
                     i += 1;
@@ -160,7 +163,7 @@ fn run_parent(child_pid: int) -> TraceResult {
     let mut awaiting_return        : HashSet<int> = HashSet::new();
     let mut seen_first_exec_return : HashSet<int> = HashSet::new();
 
-    let result = for next_trace() |pid, event| {
+    for next_trace() |pid, event| {
         match event {
             SystemCall { syscall_no: ptrace::syscall::EXECVE, arguments: args } => {
                 if awaiting_return.contains(&pid) {
@@ -177,13 +180,9 @@ fn run_parent(child_pid: int) -> TraceResult {
             }
             _ => (),
         }
-    };
-
-    match result {
-        TraceError(posix::ECHILD) => TraceOk,
-        TraceError(_)             => result,
-        _                         => TraceOk,
     }
+
+    TraceOk
 }
 
 fn main() {

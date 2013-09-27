@@ -1,9 +1,17 @@
 use posix::CouldBeAnError;
+use std::cast;
+use std::libc;
+use std::os;
+use std::ptr;
 
 mod posix;
 
-extern mod c {
-    unsafe fn ptrace(request: libc::c_int, pid: libc::pid_t, addr: *libc::c_void, data: *libc::c_void) -> libc::c_long;
+mod c {
+    use std::libc;
+
+    extern {
+        fn ptrace(request: libc::c_int, pid: libc::pid_t, addr: *libc::c_void, data: *libc::c_void) -> libc::c_long;
+    }
 }
 
 pub enum PtraceResult {

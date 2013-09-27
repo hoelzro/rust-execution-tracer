@@ -1,11 +1,21 @@
-extern mod c {
-    unsafe fn fork() -> libc::pid_t;
-    unsafe fn exit(status: libc::c_int) -> !;
-    unsafe fn getpid() -> libc::pid_t;
-    unsafe fn waitpid(pid: libc::pid_t, status: *libc::c_int, flags: libc::c_int) -> libc::c_int;
-    unsafe fn execvp(file: *libc::c_char, argv: **libc::c_char) -> !;
-    unsafe fn kill(pid: libc::pid_t, signal: libc::c_int) -> libc::c_int;
-    unsafe fn strerror(errno: libc::c_int) -> *libc::c_char;
+use std::libc;
+use std::os;
+use std::ptr;
+use std::str;
+use std::vec;
+
+mod c {
+    use std::libc;
+
+    extern {
+        fn fork() -> libc::pid_t;
+        fn exit(status: libc::c_int) -> !;
+        fn getpid() -> libc::pid_t;
+        fn waitpid(pid: libc::pid_t, status: *libc::c_int, flags: libc::c_int) -> libc::c_int;
+        fn execvp(file: *libc::c_char, argv: **libc::c_char) -> !;
+        fn kill(pid: libc::pid_t, signal: libc::c_int) -> libc::c_int;
+        fn strerror(errno: libc::c_int) -> *libc::c_char;
+    }
 }
 
 pub trait CouldBeAnError {
@@ -142,16 +152,14 @@ fn str_array_to_char_pp(ary: &[~str], callback: &fn(**libc::c_char)) {
     fn helper_fn(ptrs: &mut ~[*libc::c_char], ary: &[~str], callback: &fn(**libc::c_char)) {
         match ary {
             [] => {
-                unsafe {
-                    ptrs.push(ptr::null());
-                    callback(vec::raw::to_ptr(*ptrs));
-                }
+                ptrs.push(ptr::null());
+                callback(vec::raw::to_ptr(*ptrs));
             },
-            [head, ..tail] => {
-                do str::as_c_str(head) |raw_str| {
+            [ref head, ..tail] => {
+                do str::as_c_str(*head) |raw_str| {
                     ptrs.push(raw_str);
-                    helper_fn(ptrs, tail, callback);
                 }
+                helper_fn(ptrs, tail, callback);
             },
         }
     }
