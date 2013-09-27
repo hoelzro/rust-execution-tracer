@@ -90,18 +90,21 @@ fn to_ptrace_result(return_value: libc::c_long) -> PtraceResult {
     }
 }
 
+#[fixed_stack_segment]
 pub fn trace_me() -> PtraceResult {
     unsafe {
         to_ptrace_result(c::ptrace(TRACEME, 0, ptr::null(), ptr::null()))
     }
 }
 
+#[fixed_stack_segment]
 pub fn setoptions(pid: int, options: int) -> PtraceResult {
     unsafe {
         to_ptrace_result(c::ptrace(SETOPTIONS, pid as libc::pid_t, ptr::null(), options as *libc::c_void))
     }
 }
 
+#[fixed_stack_segment]
 pub fn syscall(pid: int) -> PtraceResult {
     unsafe {
         to_ptrace_result(c::ptrace(SYSCALL, pid as libc::pid_t, ptr::null(), ptr::null()))
@@ -109,6 +112,7 @@ pub fn syscall(pid: int) -> PtraceResult {
 }
 
 // XXX this should probably return Result<~UserRegs, int>
+#[fixed_stack_segment]
 pub fn get_registers(pid: int) -> Result<UserRegs, int> {
     unsafe {
         // XXX is there a better way to do this?
@@ -152,6 +156,7 @@ pub fn get_registers(pid: int) -> Result<UserRegs, int> {
     }
 }
 
+#[fixed_stack_segment]
 pub fn peektext(pid: int, addr: *libc::c_void) -> Result<word, int> {
     unsafe {
         let result = c::ptrace(PEEKTEXT, pid as libc::pid_t, addr, ptr::null());

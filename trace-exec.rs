@@ -64,7 +64,7 @@ fn init_trace(child_pid: int) -> TraceResult {
                 if result.is_error() {
                     return wrap_result(result);
                 }
-                wrap_result(ptrace::syscall(pid))
+                resume_trace(pid)
             } else {
                 TraceError(0) // shit...
             }
@@ -76,29 +76,44 @@ fn resume_trace(child_pid: int) -> TraceResult {
     wrap_result(ptrace::syscall(child_pid))
 }
 
-fn next_trace(callback: &fn(int, TraceEvent) -> bool) -> bool {
-    loop {
+struct TraceIterator {
+    previous_pid: int
+}
+
+impl Iterator<(int, TraceEvent)> for TraceIterator {
+    fn next(&mut self) -> Option<(int, TraceEvent)> {
+        if self.previous_pid != -1 {
+            resume_trace(self.previous_pid);
+        }
+
         let result = posix::waitpid(-1, 0);
 
         match result {
-            posix::WaitPidFailure(_)           => return false,
+            posix::WaitPidFailure(_)           => None,
             posix::WaitPidSuccess(pid, status) => {
+                self.previous_pid = pid;
+
                 if ((status >> 8) & (0x80 | posix::SIGTRAP)) != 0 {
                     match ptrace::get_registers(pid) {
                         Ok(ptrace::UserRegs { orig_rax: syscall_no, rdi: rdi, rsi: rsi, rdx: rdx, rcx: rcx, r8: r8, r9: r9, _ }) => {
-                            callback(pid, SystemCall {
+                            Some((pid, SystemCall {
                                 syscall_no : syscall_no,
                                 arguments  : ( rdi, rsi, rdx, rcx, r8, r9 ),
-                            });
+                            }))
                         },
-                        Err(_) => return false,
+                        Err(_) => None,
                     }
                 } else {
-                    callback(pid, Other);
+                    Some((pid, Other))
                 }
-                resume_trace(pid);
             },
         }
+    }
+}
+
+fn next_trace() -> TraceIterator {
+    TraceIterator {
+        previous_pid: -1
     }
 }
 
@@ -127,7 +142,7 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
         mut_addr += sys::size_of::<word>() as word;
     }
 
-    str::from_bytes(bytes)
+    str::from_utf8(bytes)
 }
 
 fn get_program_args(pid: int, addr: *libc::c_void) -> ~[~str] {
@@ -163,7 +178,7 @@ fn run_parent(child_pid: int) -> TraceResult {
     let mut awaiting_return        : HashSet<int> = HashSet::new();
     let mut seen_first_exec_return : HashSet<int> = HashSet::new();
 
-    for next_trace() |pid, event| {
+    for (pid, event) in next_trace() {
         match event {
             SystemCall { syscall_no: ptrace::syscall::EXECVE, arguments: args } => {
                 if awaiting_return.contains(&pid) {

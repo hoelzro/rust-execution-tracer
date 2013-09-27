@@ -29,6 +29,7 @@ pub enum PosixResult {
     PosixError(int),
 }
 
+#[fixed_stack_segment]
 pub fn strerror(errno: int) -> ~str {
     unsafe {
         str::raw::from_c_str(c::strerror(errno as libc::c_int))
@@ -115,6 +116,7 @@ impl CouldBeAnError for WaitPidResult {
     }
 }
 
+#[fixed_stack_segment]
 pub fn fork() -> ForkResult {
     unsafe {
         let pid = c::fork();
@@ -127,12 +129,14 @@ pub fn fork() -> ForkResult {
     }
 }
 
+#[fixed_stack_segment]
 pub fn getpid() -> int {
     unsafe {
         c::getpid() as int
     }
 }
 
+#[fixed_stack_segment]
 pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
     unsafe {
         let status : libc::c_int = 0;
@@ -156,7 +160,7 @@ fn str_array_to_char_pp(ary: &[~str], callback: &fn(**libc::c_char)) {
                 callback(vec::raw::to_ptr(*ptrs));
             },
             [ref head, ..tail] => {
-                do str::as_c_str(*head) |raw_str| {
+                do head.with_c_str |raw_str| {
                     ptrs.push(raw_str);
                 }
                 helper_fn(ptrs, tail, callback);
@@ -169,9 +173,10 @@ fn str_array_to_char_pp(ary: &[~str], callback: &fn(**libc::c_char)) {
     helper_fn(&mut ptrs, ary, callback);
 }
 
+#[fixed_stack_segment]
 pub fn exec(command_and_args: &[~str]) {
     unsafe {
-        do str::as_c_str(command_and_args[0]) |command| {
+        do command_and_args[0].with_c_str |command| {
             do str_array_to_char_pp(command_and_args) |args| {
                 c::execvp(command, args);
             }
@@ -179,12 +184,14 @@ pub fn exec(command_and_args: &[~str]) {
     }
 }
 
+#[fixed_stack_segment]
 pub fn exit(status: int) -> ! {
     unsafe {
         c::exit(status as libc::c_int)
     }
 }
 
+#[fixed_stack_segment]
 pub fn kill(pid: int, signum: int) -> PosixResult {
     unsafe {
         match c::kill(pid as libc::pid_t, signum as libc::c_int) {
