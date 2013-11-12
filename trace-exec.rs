@@ -165,7 +165,7 @@ fn get_program_args(pid: int, addr: *libc::c_void) -> ~[~str] {
 
 fn handle_syscall_arguments(pid: int, (_, argv_ptr, _, _, _, _): (word, word, word, word, word, word)) {
     let argv = get_program_args(pid, argv_ptr as *libc::c_void);
-    stdio::println(fmt!("executable args: '%?'", argv));
+    stdio::println(format!("executable args: '{:?}'", argv));
 }
 
 fn run_parent(child_pid: int) -> TraceResult {
@@ -215,14 +215,14 @@ fn main() {
             posix::exit(255);
         }
         posix::ForkFailure(_) => {
-            stdio::println(fmt!("An error occurred: %s", result.get_error_as_string()));
+            stdio::println(format!("An error occurred: {}", result.get_error_as_string()));
         }
         posix::ForkParent(child_pid) => {
             let result = run_parent(child_pid);
 
             if result.is_error() {
                 posix::kill(child_pid, posix::SIGKILL);
-                stdio::println(fmt!("An error occurred: %s", result.get_error_as_string()));
+                stdio::println(format!("An error occurred: {}", result.get_error_as_string()));
             }
         }
     }
