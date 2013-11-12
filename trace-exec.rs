@@ -12,10 +12,7 @@ mod posix;
 mod ptrace;
 
 enum TraceEvent {
-    SystemCall {
-        syscall_no : word,
-        arguments  : (word, word, word, word, word, word),
-    },
+    SystemCall(word, word, word, word, word, word, word),
     Other,
 }
 
@@ -96,10 +93,7 @@ impl Iterator<(int, TraceEvent)> for TraceIterator {
                 if ((status >> 8) & (0x80 | posix::SIGTRAP)) != 0 {
                     match ptrace::get_registers(pid) {
                         Ok(ptrace::UserRegs { orig_rax: syscall_no, rdi: rdi, rsi: rsi, rdx: rdx, rcx: rcx, r8: r8, r9: r9, _ }) => {
-                            Some((pid, SystemCall {
-                                syscall_no : syscall_no,
-                                arguments  : ( rdi, rsi, rdx, rcx, r8, r9 ),
-                            }))
+                            Some((pid, SystemCall(syscall_no, rdi, rsi, rdx, rcx, r8, r9)))
                         },
                         Err(_) => None,
                     }
@@ -180,7 +174,7 @@ fn run_parent(child_pid: int) -> TraceResult {
 
     for (pid, event) in next_trace() {
         match event {
-            SystemCall { syscall_no: ptrace::syscall::EXECVE, arguments: args } => {
+            SystemCall(ptrace::syscall::EXECVE, rdi, rsi, rdx, rcx, r8, r9) => {
                 if awaiting_return.contains(&pid) {
                     if seen_first_exec_return.contains(&pid) {
                         awaiting_return.remove(&pid);
@@ -189,7 +183,7 @@ fn run_parent(child_pid: int) -> TraceResult {
                         seen_first_exec_return.insert(pid);
                     }
                 } else {
-                    handle_syscall_arguments(pid, args);
+                    handle_syscall_arguments(pid, (rdi, rsi, rdx, rcx, r8, r9));
                     awaiting_return.insert(pid);
                 }
             }
