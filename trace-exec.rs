@@ -1,11 +1,11 @@
 use ptrace::word;
 use posix::CouldBeAnError; // needed for impl below
 
-use std::io;
+use std::rt::io::stdio;
 use std::libc;
 use std::os;
 use std::str;
-use std::sys;
+use std::mem;
 use HashSet = std::hashmap::HashSet;
 
 mod posix;
@@ -128,7 +128,7 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
                 let mut i = 0;
 
                 // XXX I'm not using a for loop because of a bug in Rust
-                while i < sys::size_of::<word>() {
+                while i < mem::size_of::<word>() {
                     // XXX byte order
                     let lsb = (word >> (i * 8)) & 0xFF;
                     if lsb == 0 {
@@ -139,7 +139,7 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
                 }
             }
         }
-        mut_addr += sys::size_of::<word>() as word;
+        mut_addr += mem::size_of::<word>() as word;
     }
 
     str::from_utf8(bytes)
@@ -157,7 +157,7 @@ fn get_program_args(pid: int, addr: *libc::c_void) -> ~[~str] {
             }
         }
 
-        mut_addr += sys::size_of::<word>() as word;
+        mut_addr += mem::size_of::<word>() as word;
     }
 
     args
@@ -165,7 +165,7 @@ fn get_program_args(pid: int, addr: *libc::c_void) -> ~[~str] {
 
 fn handle_syscall_arguments(pid: int, (_, argv_ptr, _, _, _, _): (word, word, word, word, word, word)) {
     let argv = get_program_args(pid, argv_ptr as *libc::c_void);
-    io::println(fmt!("executable args: '%?'", argv));
+    stdio::println(fmt!("executable args: '%?'", argv));
 }
 
 fn run_parent(child_pid: int) -> TraceResult {
@@ -215,14 +215,14 @@ fn main() {
             posix::exit(255);
         }
         posix::ForkFailure(_) => {
-            io::println(fmt!("An error occurred: %s", result.get_error_as_string()));
+            stdio::println(fmt!("An error occurred: %s", result.get_error_as_string()));
         }
         posix::ForkParent(child_pid) => {
             let result = run_parent(child_pid);
 
             if result.is_error() {
                 posix::kill(child_pid, posix::SIGKILL);
-                io::println(fmt!("An error occurred: %s", result.get_error_as_string()));
+                stdio::println(fmt!("An error occurred: %s", result.get_error_as_string()));
             }
         }
     }
