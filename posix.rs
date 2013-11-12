@@ -204,3 +204,5 @@ pub fn kill(pid: int, signum: int) -> PosixResult {
 pub static SIGTRAP : int = 5;
 pub static SIGKILL : int = 9;
 pub static ECHILD  : int = 10;
+
+fn main() {}

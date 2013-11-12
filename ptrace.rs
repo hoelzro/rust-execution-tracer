@@ -182,3 +182,5 @@ pub static TRACEEXEC    : int = 0x00000010;
 pub mod syscall {
     pub static EXECVE : ::ptrace::word = 59;
 }
+
+fn main() {}
