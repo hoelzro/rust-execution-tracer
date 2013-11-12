@@ -8,13 +8,13 @@ mod c {
     use std::libc;
 
     extern {
-        fn fork() -> libc::pid_t;
-        fn exit(status: libc::c_int) -> !;
-        fn getpid() -> libc::pid_t;
-        fn waitpid(pid: libc::pid_t, status: *libc::c_int, flags: libc::c_int) -> libc::c_int;
-        fn execvp(file: *libc::c_char, argv: **libc::c_char) -> !;
-        fn kill(pid: libc::pid_t, signal: libc::c_int) -> libc::c_int;
-        fn strerror(errno: libc::c_int) -> *libc::c_char;
+        pub fn fork() -> libc::pid_t;
+        pub fn exit(status: libc::c_int) -> !;
+        pub fn getpid() -> libc::pid_t;
+        pub fn waitpid(pid: libc::pid_t, status: *libc::c_int, flags: libc::c_int) -> libc::c_int;
+        pub fn execvp(file: *libc::c_char, argv: **libc::c_char) -> !;
+        pub fn kill(pid: libc::pid_t, signal: libc::c_int) -> libc::c_int;
+        pub fn strerror(errno: libc::c_int) -> *libc::c_char;
     }
 }
 

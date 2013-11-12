@@ -10,7 +10,7 @@ mod c {
     use std::libc;
 
     extern {
-        fn ptrace(request: libc::c_int, pid: libc::pid_t, addr: *libc::c_void, data: *libc::c_void) -> libc::c_long;
+        pub fn ptrace(request: libc::c_int, pid: libc::pid_t, addr: *libc::c_void, data: *libc::c_void) -> libc::c_long;
     }
 }
 
@@ -180,7 +180,7 @@ pub static TRACEFORK    : int = 0x00000002;
 pub static TRACEEXEC    : int = 0x00000010;
 
 pub mod syscall {
-    pub static EXECVE : ::ptrace::word = 59;
+    pub static EXECVE : super::word = 59;
 }
 
 fn main() {}
