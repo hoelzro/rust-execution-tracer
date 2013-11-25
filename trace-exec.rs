@@ -1,7 +1,7 @@
 use ptrace::word;
 use posix::CouldBeAnError; // needed for impl below
 
-use std::rt::io::stdio;
+use std::io::stdio;
 use std::libc;
 use std::os;
 use std::str;
