@@ -152,8 +152,8 @@ pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
 }
 
 // this is probably pretty awful...
-fn str_array_to_char_pp(ary: &[~str], callback: &fn(**libc::c_char)) {
-    fn helper_fn(ptrs: &mut ~[*libc::c_char], ary: &[~str], callback: &fn(**libc::c_char)) {
+fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
+    fn helper_fn(ptrs: &mut ~[*libc::c_char], ary: &[~str], callback: |**libc::c_char| -> ()) {
         match ary {
             [] => {
                 ptrs.push(ptr::null());
