@@ -92,7 +92,7 @@ impl Iterator<(int, TraceEvent)> for TraceIterator {
 
                 if ((status >> 8) & (0x80 | posix::SIGTRAP)) != 0 {
                     match ptrace::get_registers(pid) {
-                        Ok(ptrace::UserRegs { orig_rax: syscall_no, rdi: rdi, rsi: rsi, rdx: rdx, rcx: rcx, r8: r8, r9: r9, _ }) => {
+                        Ok(ptrace::UserRegs { orig_rax: syscall_no, rdi: rdi, rsi: rsi, rdx: rdx, rcx: rcx, r8: r8, r9: r9, .. }) => {
                             Some((pid, SystemCall(syscall_no, rdi, rsi, rdx, rcx, r8, r9)))
                         },
                         Err(_) => None,
