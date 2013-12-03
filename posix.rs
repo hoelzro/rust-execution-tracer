@@ -15,6 +15,7 @@ mod c {
         pub fn execvp(file: *libc::c_char, argv: **libc::c_char) -> !;
         pub fn kill(pid: libc::pid_t, signal: libc::c_int) -> libc::c_int;
         pub fn strerror(errno: libc::c_int) -> *libc::c_char;
+        pub fn strdup(s: *libc::c_char) -> *libc::c_char;
     }
 }
 
@@ -157,7 +158,11 @@ fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
             },
             [ref head, ..tail] => {
                 head.with_c_str(|raw_str| {
-                    ptrs.push(raw_str);
+                    unsafe {
+                        let copy = c::strdup(raw_str);
+                        assert!(ptr::is_not_null(copy));
+                        ptrs.push(copy);
+                    }
                 });
                 helper_fn(ptrs, tail, callback);
             },
@@ -167,6 +172,12 @@ fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
     let mut ptrs : ~[*libc::c_char] = vec::with_capacity(ary.len());
 
     helper_fn(&mut ptrs, ary, callback);
+
+    unsafe {
+        for ptr in ptrs.iter() {
+            libc::free(*ptr as *libc::c_void);
+        }
+    }
 }
 
 pub fn exec(command_and_args: &[~str]) {
