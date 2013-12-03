@@ -160,9 +160,9 @@ fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
                 callback(vec::raw::to_ptr(*ptrs));
             },
             [ref head, ..tail] => {
-                do head.with_c_str |raw_str| {
+                head.with_c_str(|raw_str| {
                     ptrs.push(raw_str);
-                }
+                });
                 helper_fn(ptrs, tail, callback);
             },
         }
@@ -176,11 +176,11 @@ fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
 #[fixed_stack_segment]
 pub fn exec(command_and_args: &[~str]) {
     unsafe {
-        do command_and_args[0].with_c_str |command| {
-            do str_array_to_char_pp(command_and_args) |args| {
+        command_and_args[0].with_c_str(|command| {
+            str_array_to_char_pp(command_and_args, |args| {
                 c::execvp(command, args);
-            }
-        }
+            });
+        });
     }
 }
 
