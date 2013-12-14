@@ -136,7 +136,7 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
         mut_addr += mem::size_of::<word>() as word;
     }
 
-    str::from_utf8(bytes)
+    str::from_utf8_owned(bytes)
 }
 
 fn get_program_args(pid: int, addr: *libc::c_void) -> ~[~str] {
