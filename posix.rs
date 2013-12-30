@@ -154,7 +154,7 @@ fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
         match ary {
             [] => {
                 ptrs.push(ptr::null());
-                callback(vec::raw::to_ptr(*ptrs));
+                callback(ptrs.as_ptr());
             },
             [ref head, ..tail] => {
                 head.with_c_str(|raw_str| {
