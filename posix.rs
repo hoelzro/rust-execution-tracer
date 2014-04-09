@@ -2,7 +2,7 @@ use std::libc;
 use std::os;
 use std::ptr;
 use std::str;
-use std::vec;
+use std::slice;
 
 mod c {
     use std::libc;
@@ -160,7 +160,7 @@ fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
                 head.with_c_str(|raw_str| {
                     unsafe {
                         let copy = c::strdup(raw_str);
-                        assert!(ptr::is_not_null(copy));
+                        assert!(copy.is_not_null());
                         ptrs.push(copy);
                     }
                 });
@@ -169,13 +169,13 @@ fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
         }
     }
 
-    let mut ptrs : ~[*libc::c_char] = vec::with_capacity(ary.len());
+    let mut ptrs : ~[*libc::c_char] = slice::with_capacity(ary.len());
 
     helper_fn(&mut ptrs, ary, callback);
 
     unsafe {
         for ptr in ptrs.iter() {
-            libc::free(*ptr as *libc::c_void);
+            libc::free(*ptr as *mut libc::c_void);
         }
     }
 }

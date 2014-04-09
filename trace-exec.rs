@@ -1,3 +1,5 @@
+extern crate collections;
+
 use ptrace::word;
 use posix::CouldBeAnError; // needed for impl below
 
@@ -6,7 +8,7 @@ use std::libc;
 use std::os;
 use std::str;
 use std::mem;
-use HashSet = std::hashmap::HashSet;
+use HashSet = collections::hashmap::HashSet;
 
 mod posix;
 mod ptrace;
@@ -136,7 +138,11 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
         mut_addr += mem::size_of::<word>() as word;
     }
 
-    str::from_utf8_owned(bytes)
+    // XXX this is really a buffer of bytes rather than a string...
+    match str::from_utf8_owned(bytes) {
+        None    => ~"", // XXX uh-oh...
+        Some(s) => s,
+    }
 }
 
 fn get_program_args(pid: int, addr: *libc::c_void) -> ~[~str] {
