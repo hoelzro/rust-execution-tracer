@@ -45,7 +45,7 @@ impl CouldBeAnError for PosixResult {
 
     fn get_error_as_string(&self) -> String {
         match *self {
-            PosixOk           => "no error".to_owned(),
+            PosixOk           => "no error".to_string(),
             PosixError(errno) => strerror(errno),
         }
     }
@@ -75,7 +75,7 @@ impl CouldBeAnError for ForkResult {
     fn get_error_as_string(&self) -> String {
         match *self {
             ForkFailure(errno) => strerror(errno),
-            _                  => "no error".to_owned(),
+            _                  => "no error".to_string(),
         }
     }
 
@@ -103,7 +103,7 @@ impl CouldBeAnError for WaitPidResult {
     fn get_error_as_string(&self) -> String {
         match *self {
             WaitPidFailure(errno) => strerror(errno),
-            _                     => "no error".to_owned(),
+            _                     => "no error".to_string(),
         }
     }
 
