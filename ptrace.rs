@@ -1,13 +1,14 @@
+extern crate libc;
+
 use posix::CouldBeAnError;
 use std::cast;
-use std::libc;
 use std::os;
 use std::ptr;
 
 mod posix;
 
 mod c {
-    use std::libc;
+    use libc;
 
     extern {
         pub fn ptrace(request: libc::c_int, pid: libc::pid_t, addr: *libc::c_void, data: *libc::c_void) -> libc::c_long;

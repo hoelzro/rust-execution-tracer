@@ -1,10 +1,10 @@
 extern crate collections;
+extern crate libc;
 
 use ptrace::word;
 use posix::CouldBeAnError; // needed for impl below
 
 use std::io::stdio;
-use std::libc;
 use std::os;
 use std::str;
 use std::mem;

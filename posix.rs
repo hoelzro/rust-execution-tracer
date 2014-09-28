@@ -1,10 +1,10 @@
-use std::libc;
+extern crate libc;
 use std::os;
 use std::ptr;
 use std::str;
 
 mod c {
-    use std::libc;
+    use libc;
 
     extern {
         pub fn fork() -> libc::pid_t;
