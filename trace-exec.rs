@@ -31,7 +31,7 @@ impl CouldBeAnError for TraceResult {
         }
     }
 
-    fn get_error_as_string(&self) -> ~str {
+    fn get_error_as_string(&self) -> String {
         match *self {
             TraceError(errno) => posix::strerror(errno),
             _                 => "".to_owned(),
@@ -113,7 +113,7 @@ fn next_trace() -> TraceIterator {
     }
 }
 
-fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
+fn pstrdup(pid: int, addr: *libc::c_void) -> String {
     let mut bytes    = vec![];
     let mut mut_addr = addr as word;
 
@@ -145,7 +145,7 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
     }.to_owned()
 }
 
-fn get_program_args(pid: int, addr: *libc::c_void) -> Vec<~str> {
+fn get_program_args(pid: int, addr: *libc::c_void) -> Vec<String> {
     let mut args     = vec![];
     let mut mut_addr = addr as word;
 

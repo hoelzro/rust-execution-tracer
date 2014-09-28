@@ -28,7 +28,7 @@ impl CouldBeAnError for PtraceResult {
         }
     }
 
-    fn get_error_as_string(&self) -> ~str {
+    fn get_error_as_string(&self) -> String {
         match *self {
             PtraceError(errno) => posix::strerror(errno),
             _                  => "no error".to_owned(),

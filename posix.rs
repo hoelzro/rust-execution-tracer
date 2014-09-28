@@ -20,7 +20,7 @@ mod c {
 
 pub trait CouldBeAnError {
     fn is_error(&self) -> bool;
-    fn get_error_as_string(&self) -> ~str;
+    fn get_error_as_string(&self) -> String;
     fn get_errno(&self) -> int;
 }
 
@@ -29,7 +29,7 @@ pub enum PosixResult {
     PosixError(int),
 }
 
-pub fn strerror(errno: int) -> ~str {
+pub fn strerror(errno: int) -> String {
     unsafe {
         str::raw::from_c_str(c::strerror(errno as libc::c_int))
     }
@@ -43,7 +43,7 @@ impl CouldBeAnError for PosixResult {
         }
     }
 
-    fn get_error_as_string(&self) -> ~str {
+    fn get_error_as_string(&self) -> String {
         match *self {
             PosixOk           => "no error".to_owned(),
             PosixError(errno) => strerror(errno),
@@ -72,7 +72,7 @@ impl CouldBeAnError for ForkResult {
         }
     }
 
-    fn get_error_as_string(&self) -> ~str {
+    fn get_error_as_string(&self) -> String {
         match *self {
             ForkFailure(errno) => strerror(errno),
             _                  => "no error".to_owned(),
@@ -100,7 +100,7 @@ impl CouldBeAnError for WaitPidResult {
         }
     }
 
-    fn get_error_as_string(&self) -> ~str {
+    fn get_error_as_string(&self) -> String {
         match *self {
             WaitPidFailure(errno) => strerror(errno),
             _                     => "no error".to_owned(),
@@ -148,8 +148,8 @@ pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
 }
 
 // this is probably pretty awful...
-fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
-    fn helper_fn(ptrs: &mut Vec<*libc::c_char>, ary: &[~str], callback: |**libc::c_char| -> ()) {
+fn str_array_to_char_pp(ary: &[String], callback: |**libc::c_char| -> ()) {
+    fn helper_fn(ptrs: &mut Vec<*libc::c_char>, ary: &[String], callback: |**libc::c_char| -> ()) {
         match ary {
             [] => {
                 ptrs.push(ptr::null());
@@ -179,7 +179,7 @@ fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
     }
 }
 
-pub fn exec(command_and_args: &[~str]) {
+pub fn exec(command_and_args: &[String]) {
     unsafe {
         command_and_args[0].with_c_str(|command| {
             str_array_to_char_pp(command_and_args, |args| {
