@@ -1,7 +1,7 @@
 extern crate libc;
 
 use posix::CouldBeAnError;
-use std::cast;
+use std::mem;
 use std::os;
 use std::ptr;
 
@@ -143,7 +143,7 @@ pub fn get_registers(pid: int) -> Result<UserRegs, int> {
           gs        : 0,
         };
 
-        let result = c::ptrace(GETREGS, pid as libc::pid_t, ptr::null(), cast::transmute(&registers));
+        let result = c::ptrace(GETREGS, pid as libc::pid_t, ptr::null(), mem::transmute(&registers));
 
         if result == -1 {
             Err(os::errno())
