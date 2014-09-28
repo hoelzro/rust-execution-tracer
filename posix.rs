@@ -4,7 +4,7 @@ use std::ptr;
 use std::str;
 
 mod c {
-    use libc;
+    extern crate libc;
 
     extern {
         pub fn fork() -> libc::pid_t;

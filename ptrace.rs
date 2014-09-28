@@ -5,10 +5,10 @@ use std::mem;
 use std::os;
 use std::ptr;
 
-mod posix;
+use posix;
 
 mod c {
-    use libc;
+    extern crate libc;
 
     extern {
         pub fn ptrace(request: libc::c_int, pid: libc::pid_t, addr: *libc::c_void, data: *libc::c_void) -> libc::c_long;
