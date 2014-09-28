@@ -2,7 +2,6 @@ use std::libc;
 use std::os;
 use std::ptr;
 use std::str;
-use std::slice;
 
 mod c {
     use std::libc;
@@ -150,7 +149,7 @@ pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
 
 // this is probably pretty awful...
 fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
-    fn helper_fn(ptrs: &mut ~[*libc::c_char], ary: &[~str], callback: |**libc::c_char| -> ()) {
+    fn helper_fn(ptrs: &mut Vec<*libc::c_char>, ary: &[~str], callback: |**libc::c_char| -> ()) {
         match ary {
             [] => {
                 ptrs.push(ptr::null());
@@ -169,7 +168,7 @@ fn str_array_to_char_pp(ary: &[~str], callback: |**libc::c_char| -> ()) {
         }
     }
 
-    let mut ptrs : ~[*libc::c_char] = slice::with_capacity(ary.len());
+    let mut ptrs : Vec<*libc::c_char> = Vec::with_capacity(ary.len());
 
     helper_fn(&mut ptrs, ary, callback);
 

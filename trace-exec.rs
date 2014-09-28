@@ -114,7 +114,7 @@ fn next_trace() -> TraceIterator {
 }
 
 fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
-    let mut bytes    = ~[];
+    let mut bytes    = vec![];
     let mut mut_addr = addr as word;
 
     'outer: loop {
@@ -139,14 +139,14 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
     }
 
     // XXX this is really a buffer of bytes rather than a string...
-    match str::from_utf8_owned(bytes) {
-        None    => "".to_owned(), // XXX uh-oh...
+    match str::from_utf8(bytes.slice_from(0)) {
+        None    => "", // XXX uh-oh...
         Some(s) => s,
-    }
+    }.to_owned()
 }
 
-fn get_program_args(pid: int, addr: *libc::c_void) -> ~[~str] {
-    let mut args     = ~[];
+fn get_program_args(pid: int, addr: *libc::c_void) -> Vec<~str> {
+    let mut args     = vec![];
     let mut mut_addr = addr as word;
 
     loop {
