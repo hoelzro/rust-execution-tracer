@@ -30,14 +30,14 @@ impl CouldBeAnError for PtraceResult {
     fn get_error_as_string(&self) -> ~str {
         match *self {
             PtraceError(errno) => posix::strerror(errno),
-            _                  => ~"no error",
+            _                  => "no error".to_owned(),
         }
     }
 
     fn get_errno(&self) -> int {
         match *self {
             PtraceError(errno) => errno,
-            _                  => fail!(~"You can't get an errno from a success value!"),
+            _                  => fail!("You can't get an errno from a success value!"),
         }
     }
 }

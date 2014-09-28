@@ -34,14 +34,14 @@ impl CouldBeAnError for TraceResult {
     fn get_error_as_string(&self) -> ~str {
         match *self {
             TraceError(errno) => posix::strerror(errno),
-            _                 => ~"",
+            _                 => "".to_owned(),
         }
     }
 
     fn get_errno(&self) -> int {
         match *self {
             TraceError(errno) => errno,
-            _                 => fail!(~"You can't get an errno from a success value!"),
+            _                 => fail!("You can't get an errno from a success value!"),
         }
     }
 }
@@ -140,7 +140,7 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> ~str {
 
     // XXX this is really a buffer of bytes rather than a string...
     match str::from_utf8_owned(bytes) {
-        None    => ~"", // XXX uh-oh...
+        None    => "".to_owned(), // XXX uh-oh...
         Some(s) => s,
     }
 }
