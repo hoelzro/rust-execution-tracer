@@ -10,11 +10,11 @@ mod c {
         pub fn fork() -> libc::pid_t;
         pub fn exit(status: libc::c_int) -> !;
         pub fn getpid() -> libc::pid_t;
-        pub fn waitpid(pid: libc::pid_t, status: *libc::c_int, flags: libc::c_int) -> libc::c_int;
-        pub fn execvp(file: *libc::c_char, argv: **libc::c_char) -> !;
+        pub fn waitpid(pid: libc::pid_t, status: *mut libc::c_int, flags: libc::c_int) -> libc::c_int;
+        pub fn execvp(file: *const libc::c_char, argv: *const *const libc::c_char) -> !;
         pub fn kill(pid: libc::pid_t, signal: libc::c_int) -> libc::c_int;
-        pub fn strerror(errno: libc::c_int) -> *libc::c_char;
-        pub fn strdup(s: *libc::c_char) -> *libc::c_char;
+        pub fn strerror(errno: libc::c_int) -> *const libc::c_char;
+        pub fn strdup(s: *const libc::c_char) -> *const libc::c_char;
     }
 }
 
@@ -135,9 +135,9 @@ pub fn getpid() -> int {
 
 pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
     unsafe {
-        let status : libc::c_int = 0;
+        let mut status : libc::c_int = 0;
 
-        let pid = c::waitpid(pid as libc::pid_t, &status as *libc::c_int, flags as libc::c_int);
+        let pid = c::waitpid(pid as libc::pid_t, &mut status as *mut libc::c_int, flags as libc::c_int);
 
         if pid == -1 {
             WaitPidFailure(os::errno())
@@ -148,8 +148,8 @@ pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
 }
 
 // this is probably pretty awful...
-fn str_array_to_char_pp(ary: &[String], callback: |**libc::c_char| -> ()) {
-    fn helper_fn(ptrs: &mut Vec<*libc::c_char>, ary: &[String], callback: |**libc::c_char| -> ()) {
+fn str_array_to_char_pp(ary: &[String], callback: |*const *const libc::c_char| -> ()) {
+    fn helper_fn(ptrs: &mut Vec<*const libc::c_char>, ary: &[String], callback: |*const *const libc::c_char| -> ()) {
         match ary {
             [] => {
                 ptrs.push(ptr::null());
@@ -168,7 +168,7 @@ fn str_array_to_char_pp(ary: &[String], callback: |**libc::c_char| -> ()) {
         }
     }
 
-    let mut ptrs : Vec<*libc::c_char> = Vec::with_capacity(ary.len());
+    let mut ptrs : Vec<*const libc::c_char> = Vec::with_capacity(ary.len());
 
     helper_fn(&mut ptrs, ary, callback);
 

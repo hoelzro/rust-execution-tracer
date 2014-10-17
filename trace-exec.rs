@@ -113,12 +113,12 @@ fn next_trace() -> TraceIterator {
     }
 }
 
-fn pstrdup(pid: int, addr: *libc::c_void) -> String {
+fn pstrdup(pid: int, addr: *const libc::c_void) -> String {
     let mut bytes    = vec![];
     let mut mut_addr = addr as word;
 
     'outer: loop {
-        match ptrace::peektext(pid, mut_addr as *libc::c_void) {
+        match ptrace::peektext(pid, mut_addr as *const libc::c_void) {
             Err(_)   => break,
             Ok(word) => {
                 let mut i = 0;
@@ -145,15 +145,15 @@ fn pstrdup(pid: int, addr: *libc::c_void) -> String {
     }.to_owned()
 }
 
-fn get_program_args(pid: int, addr: *libc::c_void) -> Vec<String> {
+fn get_program_args(pid: int, addr: *const libc::c_void) -> Vec<String> {
     let mut args     = vec![];
     let mut mut_addr = addr as word;
 
     loop {
-        match ptrace::peektext(pid, mut_addr as *libc::c_void) {
+        match ptrace::peektext(pid, mut_addr as *const libc::c_void) {
             Err(_) | Ok(0) => break,
             Ok(word)       => {
-                args.push(pstrdup(pid, word as *libc::c_void));
+                args.push(pstrdup(pid, word as *const libc::c_void));
             }
         }
 
@@ -164,7 +164,7 @@ fn get_program_args(pid: int, addr: *libc::c_void) -> Vec<String> {
 }
 
 fn handle_syscall_arguments(pid: int, (_, argv_ptr, _, _, _, _): (word, word, word, word, word, word)) {
-    let argv = get_program_args(pid, argv_ptr as *libc::c_void);
+    let argv = get_program_args(pid, argv_ptr as *const libc::c_void);
     println!("executable args: '{}'", argv);
 }
 

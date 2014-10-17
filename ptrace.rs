@@ -11,7 +11,7 @@ mod c {
     extern crate libc;
 
     extern {
-        pub fn ptrace(request: libc::c_int, pid: libc::pid_t, addr: *libc::c_void, data: *libc::c_void) -> libc::c_long;
+        pub fn ptrace(request: libc::c_int, pid: libc::pid_t, addr: *const libc::c_void, data: *const libc::c_void) -> libc::c_long;
     }
 }
 
@@ -99,7 +99,7 @@ pub fn trace_me() -> PtraceResult {
 
 pub fn setoptions(pid: int, options: int) -> PtraceResult {
     unsafe {
-        to_ptrace_result(c::ptrace(SETOPTIONS, pid as libc::pid_t, ptr::null(), options as *libc::c_void))
+        to_ptrace_result(c::ptrace(SETOPTIONS, pid as libc::pid_t, ptr::null(), options as *const libc::c_void))
     }
 }
 
@@ -153,7 +153,7 @@ pub fn get_registers(pid: int) -> Result<UserRegs, int> {
     }
 }
 
-pub fn peektext(pid: int, addr: *libc::c_void) -> Result<word, int> {
+pub fn peektext(pid: int, addr: *const libc::c_void) -> Result<word, int> {
     unsafe {
         let result = c::ptrace(PEEKTEXT, pid as libc::pid_t, addr, ptr::null());
 
