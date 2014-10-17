@@ -155,7 +155,7 @@ fn str_array_to_char_pp(ary: &[String], callback: |*const *const libc::c_char| -
                 ptrs.push(ptr::null());
                 callback(ptrs.as_ptr());
             },
-            [ref head, ..tail] => {
+            [ref head, tail..] => {
                 head.with_c_str(|raw_str| {
                     unsafe {
                         let copy = c::strdup(raw_str);
