@@ -1,7 +1,7 @@
 extern crate libc;
 use std::os;
 use std::ptr;
-use std::str;
+use std::string;
 
 mod c {
     extern crate libc;
@@ -31,7 +31,7 @@ pub enum PosixResult {
 
 pub fn strerror(errno: int) -> String {
     unsafe {
-        str::raw::from_c_str(c::strerror(errno as libc::c_int))
+        string::raw::from_buf(c::strerror(errno as libc::c_int) as *const u8)
     }
 }
 
