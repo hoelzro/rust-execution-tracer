@@ -8,7 +8,7 @@ use std::io::stdio;
 use std::os;
 use std::str;
 use std::mem;
-use HashSet = std::collections::hashmap::HashSet;
+use std::collections::hashmap::HashSet as HashSet;
 
 mod posix;
 mod ptrace;
