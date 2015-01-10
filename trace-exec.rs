@@ -1,10 +1,9 @@
 extern crate collections;
 extern crate libc;
 
-use ptrace::word;
+use ptrace::Word;
 use posix::CouldBeAnError; // needed for impl below
 
-use std::io::stdio;
 use std::os;
 use std::str;
 use std::mem;
@@ -14,7 +13,7 @@ mod posix;
 mod ptrace;
 
 enum TraceEvent {
-    SystemCall(word, word, word, word, word, word, word),
+    SystemCall(Word, Word, Word, Word, Word, Word, Word),
     Other,
 }
 
@@ -34,7 +33,7 @@ impl CouldBeAnError for TraceResult {
     fn get_error_as_string(&self) -> String {
         match *self {
             TraceError(errno) => posix::strerror(errno),
-            _                 => "".to_owned(),
+            _                 => "".to_string(),
         }
     }
 
@@ -115,7 +114,7 @@ fn next_trace() -> TraceIterator {
 
 fn pstrdup(pid: int, addr: *const libc::c_void) -> String {
     let mut bytes    = vec![];
-    let mut mut_addr = addr as word;
+    let mut mut_addr = addr as Word;
 
     'outer: loop {
         match ptrace::peektext(pid, mut_addr as *const libc::c_void) {
@@ -124,7 +123,7 @@ fn pstrdup(pid: int, addr: *const libc::c_void) -> String {
                 let mut i = 0;
 
                 // XXX I'm not using a for loop because of a bug in Rust
-                while i < mem::size_of::<word>() {
+                while i < mem::size_of::<Word>() {
                     // XXX byte order
                     let lsb = (word >> (i * 8)) & 0xFF;
                     if lsb == 0 {
@@ -135,19 +134,19 @@ fn pstrdup(pid: int, addr: *const libc::c_void) -> String {
                 }
             }
         }
-        mut_addr += mem::size_of::<word>() as word;
+        mut_addr += mem::size_of::<Word>() as Word;
     }
 
     // XXX this is really a buffer of bytes rather than a string...
     match str::from_utf8(bytes.slice_from(0)) {
         None    => "", // XXX uh-oh...
         Some(s) => s,
-    }.to_owned()
+    }.to_string()
 }
 
 fn get_program_args(pid: int, addr: *const libc::c_void) -> Vec<String> {
     let mut args     = vec![];
-    let mut mut_addr = addr as word;
+    let mut mut_addr = addr as Word;
 
     loop {
         match ptrace::peektext(pid, mut_addr as *const libc::c_void) {
@@ -157,13 +156,13 @@ fn get_program_args(pid: int, addr: *const libc::c_void) -> Vec<String> {
             }
         }
 
-        mut_addr += mem::size_of::<word>() as word;
+        mut_addr += mem::size_of::<Word>() as Word;
     }
 
     args
 }
 
-fn handle_syscall_arguments(pid: int, (_, argv_ptr, _, _, _, _): (word, word, word, word, word, word)) {
+fn handle_syscall_arguments(pid: int, (_, argv_ptr, _, _, _, _): (Word, Word, Word, Word, Word, Word)) {
     let argv = get_program_args(pid, argv_ptr as *const libc::c_void);
     println!("executable args: '{}'", argv);
 }

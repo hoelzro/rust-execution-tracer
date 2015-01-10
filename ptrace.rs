@@ -31,7 +31,7 @@ impl CouldBeAnError for PtraceResult {
     fn get_error_as_string(&self) -> String {
         match *self {
             PtraceError(errno) => posix::strerror(errno),
-            _                  => "no error".to_owned(),
+            _                  => "no error".to_string(),
         }
     }
 
@@ -44,7 +44,7 @@ impl CouldBeAnError for PtraceResult {
 }
 
 // XXX this type definition might not belong here
-pub type word = u64;
+pub type Word = u64;
 
 // XXX extracting from headers would be nice
 static TRACEME    : libc::c_int = 0;
@@ -153,7 +153,7 @@ pub fn get_registers(pid: int) -> Result<UserRegs, int> {
     }
 }
 
-pub fn peektext(pid: int, addr: *const libc::c_void) -> Result<word, int> {
+pub fn peektext(pid: int, addr: *const libc::c_void) -> Result<Word, int> {
     unsafe {
         let result = c::ptrace(PEEKTEXT, pid as libc::pid_t, addr, ptr::null());
 
@@ -163,10 +163,10 @@ pub fn peektext(pid: int, addr: *const libc::c_void) -> Result<word, int> {
             if errno != 0 {
                 Err(errno)
             } else {
-                Ok(result as word)
+                Ok(result as Word)
             }
         } else {
-            Ok(result as word)
+            Ok(result as Word)
         }
     }
 }
@@ -176,7 +176,5 @@ pub static TRACEFORK    : int = 0x00000002;
 pub static TRACEEXEC    : int = 0x00000010;
 
 pub mod syscall {
-    pub static EXECVE : super::word = 59;
+    pub static EXECVE : super::Word = 59;
 }
-
-fn main() {}

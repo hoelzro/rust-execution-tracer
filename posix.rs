@@ -9,7 +9,6 @@ mod c {
     extern {
         pub fn fork() -> libc::pid_t;
         pub fn exit(status: libc::c_int) -> !;
-        pub fn getpid() -> libc::pid_t;
         pub fn waitpid(pid: libc::pid_t, status: *mut libc::c_int, flags: libc::c_int) -> libc::c_int;
         pub fn execvp(file: *const libc::c_char, argv: *const *const libc::c_char) -> !;
         pub fn kill(pid: libc::pid_t, signal: libc::c_int) -> libc::c_int;
@@ -127,12 +126,6 @@ pub fn fork() -> ForkResult {
     }
 }
 
-pub fn getpid() -> int {
-    unsafe {
-        c::getpid() as int
-    }
-}
-
 pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
     unsafe {
         let mut status : libc::c_int = 0;
@@ -206,6 +199,3 @@ pub fn kill(pid: int, signum: int) -> PosixResult {
 
 pub static SIGTRAP : int = 5;
 pub static SIGKILL : int = 9;
-pub static ECHILD  : int = 10;
-
-fn main() {}
