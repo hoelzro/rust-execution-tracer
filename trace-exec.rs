@@ -7,7 +7,7 @@ use posix::CouldBeAnError; // needed for impl below
 use std::os;
 use std::str;
 use std::mem;
-use std::collections::hashmap::HashSet as HashSet;
+use std::collections::hash_set::HashSet as HashSet;
 
 mod posix;
 mod ptrace;
