@@ -38,7 +38,7 @@ impl CouldBeAnError for PtraceResult {
     fn get_errno(&self) -> int {
         match *self {
             PtraceError(errno) => errno,
-            _                  => fail!("You can't get an errno from a success value!"),
+            _                  => panic!("You can't get an errno from a success value!"),
         }
     }
 }

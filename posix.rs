@@ -51,7 +51,7 @@ impl CouldBeAnError for PosixResult {
 
     fn get_errno(&self) -> int {
         match *self {
-            PosixOk           => fail!("You can't get an errno from a success value!"),
+            PosixOk           => panic!("You can't get an errno from a success value!"),
             PosixError(errno) => errno,
         }
     }
@@ -81,7 +81,7 @@ impl CouldBeAnError for ForkResult {
     fn get_errno(&self) -> int {
         match *self {
             ForkFailure(errno) => errno,
-            _                  => fail!("You can't get an errno from a success value!"),
+            _                  => panic!("You can't get an errno from a success value!"),
         }
     }
 }
@@ -109,7 +109,7 @@ impl CouldBeAnError for WaitPidResult {
     fn get_errno(&self) -> int {
         match *self {
             WaitPidFailure(errno) => errno,
-            _                     => fail!("You can't get an errno from a success value!"),
+            _                     => panic!("You can't get an errno from a success value!"),
         }
     }
 }

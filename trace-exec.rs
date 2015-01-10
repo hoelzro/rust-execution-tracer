@@ -40,7 +40,7 @@ impl CouldBeAnError for TraceResult {
     fn get_errno(&self) -> int {
         match *self {
             TraceError(errno) => errno,
-            _                 => fail!("You can't get an errno from a success value!"),
+            _                 => panic!("You can't get an errno from a success value!"),
         }
     }
 }
