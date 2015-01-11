@@ -171,10 +171,10 @@ pub fn peektext(pid: int, addr: *const libc::c_void) -> Result<Word, uint> {
     }
 }
 
-pub static TRACESYSGOOD : int = 0x00000001;
-pub static TRACEFORK    : int = 0x00000002;
-pub static TRACEEXEC    : int = 0x00000010;
+pub const TRACESYSGOOD : int = 0x00000001;
+pub const TRACEFORK    : int = 0x00000002;
+pub const TRACEEXEC    : int = 0x00000010;
 
 pub mod syscall {
-    pub static EXECVE : super::Word = 59;
+    pub const EXECVE : super::Word = 59;
 }
