@@ -12,7 +12,7 @@ mod c {
         pub fn waitpid(pid: libc::pid_t, status: *mut libc::c_int, flags: libc::c_int) -> libc::c_int;
         pub fn execvp(file: *const libc::c_char, argv: *const *const libc::c_char) -> !;
         pub fn kill(pid: libc::pid_t, signal: libc::c_int) -> libc::c_int;
-        pub fn strerror(errno: libc::c_int) -> *const libc::c_char;
+        pub fn strerror(errno: libc::c_uint) -> *const libc::c_char;
         pub fn strdup(s: *const libc::c_char) -> *const libc::c_char;
     }
 }
@@ -20,17 +20,17 @@ mod c {
 pub trait CouldBeAnError {
     fn is_error(&self) -> bool;
     fn get_error_as_string(&self) -> String;
-    fn get_errno(&self) -> int;
+    fn get_errno(&self) -> uint;
 }
 
 pub enum PosixResult {
     PosixOk,
-    PosixError(int),
+    PosixError(uint),
 }
 
-pub fn strerror(errno: int) -> String {
+pub fn strerror(errno: uint) -> String {
     unsafe {
-        string::raw::from_buf(c::strerror(errno as libc::c_int) as *const u8)
+        string::raw::from_buf(c::strerror(errno as libc::c_uint) as *const u8)
     }
 }
 
@@ -49,7 +49,7 @@ impl CouldBeAnError for PosixResult {
         }
     }
 
-    fn get_errno(&self) -> int {
+    fn get_errno(&self) -> uint {
         match *self {
             PosixOk           => panic!("You can't get an errno from a success value!"),
             PosixError(errno) => errno,
@@ -58,7 +58,7 @@ impl CouldBeAnError for PosixResult {
 }
 
 pub enum ForkResult {
-    ForkFailure(int),
+    ForkFailure(uint),
     ForkChild,
     ForkParent(int),
 }
@@ -78,7 +78,7 @@ impl CouldBeAnError for ForkResult {
         }
     }
 
-    fn get_errno(&self) -> int {
+    fn get_errno(&self) -> uint {
         match *self {
             ForkFailure(errno) => errno,
             _                  => panic!("You can't get an errno from a success value!"),
@@ -87,7 +87,7 @@ impl CouldBeAnError for ForkResult {
 }
 
 pub enum WaitPidResult {
-    WaitPidFailure(int),
+    WaitPidFailure(uint),
     WaitPidSuccess(int, int),
 }
 
@@ -106,7 +106,7 @@ impl CouldBeAnError for WaitPidResult {
         }
     }
 
-    fn get_errno(&self) -> int {
+    fn get_errno(&self) -> uint {
         match *self {
             WaitPidFailure(errno) => errno,
             _                     => panic!("You can't get an errno from a success value!"),

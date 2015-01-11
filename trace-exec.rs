@@ -19,7 +19,7 @@ enum TraceEvent {
 
 enum TraceResult {
     TraceOk,
-    TraceError(int),
+    TraceError(uint),
 }
 
 impl CouldBeAnError for TraceResult {
@@ -37,7 +37,7 @@ impl CouldBeAnError for TraceResult {
         }
     }
 
-    fn get_errno(&self) -> int {
+    fn get_errno(&self) -> uint {
         match *self {
             TraceError(errno) => errno,
             _                 => panic!("You can't get an errno from a success value!"),

@@ -17,7 +17,7 @@ mod c {
 
 pub enum PtraceResult {
     PtraceOk,
-    PtraceError(int),
+    PtraceError(uint),
 }
 
 impl CouldBeAnError for PtraceResult {
@@ -35,7 +35,7 @@ impl CouldBeAnError for PtraceResult {
         }
     }
 
-    fn get_errno(&self) -> int {
+    fn get_errno(&self) -> uint {
         match *self {
             PtraceError(errno) => errno,
             _                  => panic!("You can't get an errno from a success value!"),
@@ -109,8 +109,8 @@ pub fn syscall(pid: int) -> PtraceResult {
     }
 }
 
-// XXX this should probably return Result<~UserRegs, int>
-pub fn get_registers(pid: int) -> Result<UserRegs, int> {
+// XXX this should probably return Result<~UserRegs, uint>
+pub fn get_registers(pid: int) -> Result<UserRegs, uint> {
     unsafe {
         // XXX is there a better way to do this?
         let registers = UserRegs {
@@ -153,7 +153,7 @@ pub fn get_registers(pid: int) -> Result<UserRegs, int> {
     }
 }
 
-pub fn peektext(pid: int, addr: *const libc::c_void) -> Result<Word, int> {
+pub fn peektext(pid: int, addr: *const libc::c_void) -> Result<Word, uint> {
     unsafe {
         let result = c::ptrace(PEEKTEXT, pid as libc::pid_t, addr, ptr::null());
 
