@@ -143,8 +143,8 @@ fn pstrdup(pid: int, addr: *const libc::c_void) -> String {
 
     // XXX this is really a buffer of bytes rather than a string...
     match str::from_utf8(bytes.slice_from(0)) {
-        None    => "", // XXX uh-oh...
-        Some(s) => s,
+        Ok(s)  => s.to_string(),
+        Err(_) => "".to_string(),
     }.to_string()
 }
 
