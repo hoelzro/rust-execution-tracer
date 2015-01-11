@@ -1,4 +1,5 @@
 extern crate libc;
+use std::ffi;
 use std::os;
 use std::ptr;
 use std::str;
@@ -30,7 +31,8 @@ pub enum PosixResult {
 
 pub fn strerror(errno: uint) -> String {
     unsafe {
-        str::from_utf8(c::strerror(errno as libc::c_uint) as *const u8)
+        let c_error = c::strerror(errno as libc::c_uint);
+        str::from_utf8_unchecked(ffi::c_str_to_bytes(&c_error)).to_string()
     }
 }
 
