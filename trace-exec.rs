@@ -1,3 +1,5 @@
+#![feature(associated_types)]
+
 extern crate collections;
 extern crate libc;
 
@@ -78,7 +80,9 @@ struct TraceIterator {
     previous_pid: int
 }
 
-impl Iterator<(int, TraceEvent)> for TraceIterator {
+impl Iterator for TraceIterator {
+    type Item = (int, TraceEvent);
+
     fn next(&mut self) -> Option<(int, TraceEvent)> {
         if self.previous_pid != -1 {
             resume_trace(self.previous_pid);
