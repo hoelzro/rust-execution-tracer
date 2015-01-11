@@ -151,13 +151,12 @@ fn str_array_to_char_pp<Cb: Fn(*const *const libc::c_char) -> ()>(ary: &[String]
                 callback(ptrs.as_ptr());
             },
             [ref head, tail..] => {
-                head.with_c_str(|raw_str| {
-                    unsafe {
-                        let copy = c::strdup(raw_str);
-                        assert!(copy.is_not_null());
-                        ptrs.push(copy);
-                    }
-                });
+                let raw_str = ffi::CString::from_slice(head.as_slice().as_bytes());
+                unsafe {
+                    let copy = c::strdup(raw_str.as_ptr());
+                    assert!(!copy.is_null());
+                    ptrs.push(copy);
+                }
                 helper_fn(ptrs, tail, callback);
             },
         }
@@ -176,10 +175,9 @@ fn str_array_to_char_pp<Cb: Fn(*const *const libc::c_char) -> ()>(ary: &[String]
 
 pub fn exec(command_and_args: &[String]) {
     unsafe {
-        command_and_args[0].with_c_str(|command| {
-            str_array_to_char_pp(command_and_args, |args| {
-                c::execvp(command, args);
-            });
+        let command = ffi::CString::from_slice(command_and_args[0].as_slice().as_bytes());
+        str_array_to_char_pp(command_and_args, |&: args| {
+            c::execvp(command.as_ptr(), args);
         });
     }
 }
