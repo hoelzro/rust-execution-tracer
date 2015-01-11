@@ -168,7 +168,7 @@ fn get_program_args(pid: int, addr: *const libc::c_void) -> Vec<String> {
 
 fn handle_syscall_arguments(pid: int, (_, argv_ptr, _, _, _, _): (Word, Word, Word, Word, Word, Word)) {
     let argv = get_program_args(pid, argv_ptr as *const libc::c_void);
-    println!("executable args: '{}'", argv);
+    println!("executable args: '{}'", argv.as_slice().connect(" "));
 }
 
 fn run_parent(child_pid: int) -> TraceResult {
