@@ -37,22 +37,22 @@ pub fn strerror(errno: uint) -> String {
 impl CouldBeAnError for PosixResult {
     fn is_error(&self) -> bool {
         match *self {
-            PosixOk       => false,
-            PosixError(_) => true,
+            PosixResult::PosixOk       => false,
+            PosixResult::PosixError(_) => true,
         }
     }
 
     fn get_error_as_string(&self) -> String {
         match *self {
-            PosixOk           => "no error".to_string(),
-            PosixError(errno) => strerror(errno),
+            PosixResult::PosixOk           => "no error".to_string(),
+            PosixResult::PosixError(errno) => strerror(errno),
         }
     }
 
     fn get_errno(&self) -> uint {
         match *self {
-            PosixOk           => panic!("You can't get an errno from a success value!"),
-            PosixError(errno) => errno,
+            PosixResult::PosixOk           => panic!("You can't get an errno from a success value!"),
+            PosixResult::PosixError(errno) => errno,
         }
     }
 }
@@ -66,22 +66,22 @@ pub enum ForkResult {
 impl CouldBeAnError for ForkResult {
     fn is_error(&self) -> bool {
         match *self {
-            ForkFailure(_) => true,
-            _              => false,
+            ForkResult::ForkFailure(_) => true,
+            _                          => false,
         }
     }
 
     fn get_error_as_string(&self) -> String {
         match *self {
-            ForkFailure(errno) => strerror(errno),
-            _                  => "no error".to_string(),
+            ForkResult::ForkFailure(errno) => strerror(errno),
+            _                              => "no error".to_string(),
         }
     }
 
     fn get_errno(&self) -> uint {
         match *self {
-            ForkFailure(errno) => errno,
-            _                  => panic!("You can't get an errno from a success value!"),
+            ForkResult::ForkFailure(errno) => errno,
+            _                              => panic!("You can't get an errno from a success value!"),
         }
     }
 }
@@ -94,22 +94,22 @@ pub enum WaitPidResult {
 impl CouldBeAnError for WaitPidResult {
     fn is_error(&self) -> bool {
         match *self {
-            WaitPidFailure(_) => true,
-            _                 => false,
+            WaitPidResult::WaitPidFailure(_) => true,
+            _                                => false,
         }
     }
 
     fn get_error_as_string(&self) -> String {
         match *self {
-            WaitPidFailure(errno) => strerror(errno),
-            _                     => "no error".to_string(),
+            WaitPidResult::WaitPidFailure(errno) => strerror(errno),
+            _                                    => "no error".to_string(),
         }
     }
 
     fn get_errno(&self) -> uint {
         match *self {
-            WaitPidFailure(errno) => errno,
-            _                     => panic!("You can't get an errno from a success value!"),
+            WaitPidResult::WaitPidFailure(errno) => errno,
+            _                                    => panic!("You can't get an errno from a success value!"),
         }
     }
 }
@@ -119,9 +119,9 @@ pub fn fork() -> ForkResult {
         let pid = c::fork();
 
         match pid {
-            -1  => ForkFailure(os::errno()),
-            0   => ForkChild,
-            pid => ForkParent(pid as int),
+            -1  => ForkResult::ForkFailure(os::errno()),
+            0   => ForkResult::ForkChild,
+            pid => ForkResult::ForkParent(pid as int),
         }
     }
 }
@@ -133,9 +133,9 @@ pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
         let pid = c::waitpid(pid as libc::pid_t, &mut status as *mut libc::c_int, flags as libc::c_int);
 
         if pid == -1 {
-            WaitPidFailure(os::errno())
+            WaitPidResult::WaitPidFailure(os::errno())
         } else {
-            WaitPidSuccess(pid as int, status as int)
+            WaitPidResult::WaitPidSuccess(pid as int, status as int)
         }
     }
 }
@@ -191,8 +191,8 @@ pub fn exit(status: int) -> ! {
 pub fn kill(pid: int, signum: int) -> PosixResult {
     unsafe {
         match c::kill(pid as libc::pid_t, signum as libc::c_int) {
-            -1 => PosixError(os::errno()),
-            _  => PosixOk,
+            -1 => PosixResult::PosixError(os::errno()),
+            _  => PosixResult::PosixOk,
         }
     }
 }

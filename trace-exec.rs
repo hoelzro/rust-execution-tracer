@@ -25,38 +25,38 @@ enum TraceResult {
 impl CouldBeAnError for TraceResult {
     fn is_error(&self) -> bool {
         match *self {
-            TraceError(_) => true,
-            _             => false,
+            TraceResult::TraceError(_) => true,
+            _                          => false,
         }
     }
 
     fn get_error_as_string(&self) -> String {
         match *self {
-            TraceError(errno) => posix::strerror(errno),
-            _                 => "".to_string(),
+            TraceResult::TraceError(errno) => posix::strerror(errno),
+            _                              => "".to_string(),
         }
     }
 
     fn get_errno(&self) -> uint {
         match *self {
-            TraceError(errno) => errno,
-            _                 => panic!("You can't get an errno from a success value!"),
+            TraceResult::TraceError(errno) => errno,
+            _                              => panic!("You can't get an errno from a success value!"),
         }
     }
 }
 
 fn wrap_result<T: CouldBeAnError>(result: T) -> TraceResult {
     if result.is_error() {
-        TraceError(result.get_errno())
+        TraceResult::TraceError(result.get_errno())
     } else {
-        TraceOk
+        TraceResult::TraceOk
     }
 }
 
 fn init_trace(child_pid: int) -> TraceResult {
     match posix::waitpid(child_pid, 0) {
-        posix::WaitPidFailure(errno)       => TraceError(errno),
-        posix::WaitPidSuccess(pid, status) => {
+        posix::WaitPidResult::WaitPidFailure(errno)       => TraceResult::TraceError(errno),
+        posix::WaitPidResult::WaitPidSuccess(pid, status) => {
             if status & posix::SIGTRAP != 0 {
                 let result = ptrace::setoptions(pid, ptrace::TRACEFORK | ptrace::TRACESYSGOOD | ptrace::TRACEEXEC);
                 if result.is_error() {
@@ -64,7 +64,7 @@ fn init_trace(child_pid: int) -> TraceResult {
                 }
                 resume_trace(pid)
             } else {
-                TraceError(0) // shit...
+                TraceResult::TraceError(0) // shit...
             }
         },
     }
@@ -87,19 +87,19 @@ impl Iterator<(int, TraceEvent)> for TraceIterator {
         let result = posix::waitpid(-1, 0);
 
         match result {
-            posix::WaitPidFailure(_)           => None,
-            posix::WaitPidSuccess(pid, status) => {
+            posix::WaitPidResult::WaitPidFailure(_)           => None,
+            posix::WaitPidResult::WaitPidSuccess(pid, status) => {
                 self.previous_pid = pid;
 
                 if ((status >> 8) & (0x80 | posix::SIGTRAP)) != 0 {
                     match ptrace::get_registers(pid) {
                         Ok(ptrace::UserRegs { orig_rax: syscall_no, rdi: rdi, rsi: rsi, rdx: rdx, rcx: rcx, r8: r8, r9: r9, .. }) => {
-                            Some((pid, SystemCall(syscall_no, rdi, rsi, rdx, rcx, r8, r9)))
+                            Some((pid, TraceEvent::SystemCall(syscall_no, rdi, rsi, rdx, rcx, r8, r9)))
                         },
                         Err(_) => None,
                     }
                 } else {
-                    Some((pid, Other))
+                    Some((pid, TraceEvent::Other))
                 }
             },
         }
@@ -179,7 +179,7 @@ fn run_parent(child_pid: int) -> TraceResult {
 
     for (pid, event) in next_trace() {
         match event {
-            SystemCall(ptrace::syscall::EXECVE, rdi, rsi, rdx, rcx, r8, r9) => {
+            TraceEvent::SystemCall(ptrace::syscall::EXECVE, rdi, rsi, rdx, rcx, r8, r9) => {
                 if awaiting_return.contains(&pid) {
                     if seen_first_exec_return.contains(&pid) {
                         awaiting_return.remove(&pid);
@@ -196,14 +196,14 @@ fn run_parent(child_pid: int) -> TraceResult {
         }
     }
 
-    TraceOk
+    TraceResult::TraceOk
 }
 
 fn main() {
     let result = posix::fork();
 
     match result {
-        posix::ForkChild => {
+        posix::ForkResult::ForkChild => {
             let args   = os::args();
             let result = ptrace::trace_me();
 
@@ -213,10 +213,10 @@ fn main() {
             posix::exec(args.tail());
             posix::exit(255);
         }
-        posix::ForkFailure(_) => {
+        posix::ForkResult::ForkFailure(_) => {
             println!("An error occurred: {}", result.get_error_as_string());
         }
-        posix::ForkParent(child_pid) => {
+        posix::ForkResult::ForkParent(child_pid) => {
             let result = run_parent(child_pid);
 
             if result.is_error() {

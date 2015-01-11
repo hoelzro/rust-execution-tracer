@@ -23,22 +23,22 @@ pub enum PtraceResult {
 impl CouldBeAnError for PtraceResult {
     fn is_error(&self) -> bool {
         match *self {
-            PtraceError(_) => true,
-            _              => false,
+            PtraceResult::PtraceError(_) => true,
+            _                            => false,
         }
     }
 
     fn get_error_as_string(&self) -> String {
         match *self {
-            PtraceError(errno) => posix::strerror(errno),
-            _                  => "no error".to_string(),
+            PtraceResult::PtraceError(errno) => posix::strerror(errno),
+            _                                => "no error".to_string(),
         }
     }
 
     fn get_errno(&self) -> uint {
         match *self {
-            PtraceError(errno) => errno,
-            _                  => panic!("You can't get an errno from a success value!"),
+            PtraceResult::PtraceError(errno) => errno,
+            _                                => panic!("You can't get an errno from a success value!"),
         }
     }
 }
@@ -86,8 +86,8 @@ pub struct UserRegs {
 
 fn to_ptrace_result(return_value: libc::c_long) -> PtraceResult {
     match return_value {
-        -1 => PtraceError(os::errno()),
-        _  => PtraceOk,
+        -1 => PtraceResult::PtraceError(os::errno()),
+        _  => PtraceResult::PtraceOk,
     }
 }
 
