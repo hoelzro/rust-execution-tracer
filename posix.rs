@@ -143,8 +143,8 @@ pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
 }
 
 // this is probably pretty awful...
-fn str_array_to_char_pp(ary: &[String], callback: fn(*const *const libc::c_char) -> ()) {
-    fn helper_fn(ptrs: &mut Vec<*const libc::c_char>, ary: &[String], callback: fn(*const *const libc::c_char) -> ()) {
+fn str_array_to_char_pp<Cb: Fn(*const *const libc::c_char) -> ()>(ary: &[String], callback: Cb) {
+    fn helper_fn<Cb: Fn(*const *const libc::c_char) -> ()>(ptrs: &mut Vec<*const libc::c_char>, ary: &[String], callback: Cb) {
         match ary {
             [] => {
                 ptrs.push(ptr::null());
