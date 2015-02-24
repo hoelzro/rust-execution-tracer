@@ -121,7 +121,7 @@ pub fn fork() -> ForkResult {
         let pid = c::fork();
 
         match pid {
-            -1  => ForkResult::ForkFailure(os::errno()),
+            -1  => ForkResult::ForkFailure(os::errno() as uint),
             0   => ForkResult::ForkChild,
             pid => ForkResult::ForkParent(pid as int),
         }
@@ -135,7 +135,7 @@ pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
         let pid = c::waitpid(pid as libc::pid_t, &mut status as *mut libc::c_int, flags as libc::c_int);
 
         if pid == -1 {
-            WaitPidResult::WaitPidFailure(os::errno())
+            WaitPidResult::WaitPidFailure(os::errno() as uint)
         } else {
             WaitPidResult::WaitPidSuccess(pid as int, status as int)
         }
@@ -191,7 +191,7 @@ pub fn exit(status: int) -> ! {
 pub fn kill(pid: int, signum: int) -> PosixResult {
     unsafe {
         match c::kill(pid as libc::pid_t, signum as libc::c_int) {
-            -1 => PosixResult::PosixError(os::errno()),
+            -1 => PosixResult::PosixError(os::errno() as uint),
             _  => PosixResult::PosixOk,
         }
     }

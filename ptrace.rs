@@ -86,7 +86,7 @@ pub struct UserRegs {
 
 fn to_ptrace_result(return_value: libc::c_long) -> PtraceResult {
     match return_value {
-        -1 => PtraceResult::PtraceError(os::errno()),
+        -1 => PtraceResult::PtraceError(os::errno() as uint),
         _  => PtraceResult::PtraceOk,
     }
 }
@@ -146,7 +146,7 @@ pub fn get_registers(pid: int) -> Result<UserRegs, uint> {
         let result = c::ptrace(GETREGS, pid as libc::pid_t, ptr::null(), mem::transmute(&registers));
 
         if result == -1 {
-            Err(os::errno())
+            Err(os::errno() as uint)
         } else {
             Ok(registers)
         }
@@ -158,7 +158,7 @@ pub fn peektext(pid: int, addr: *const libc::c_void) -> Result<Word, uint> {
         let result = c::ptrace(PEEKTEXT, pid as libc::pid_t, addr, ptr::null());
 
         if result == -1 {
-            let errno = os::errno();
+            let errno = os::errno() as uint;
 
             if errno != 0 {
                 Err(errno)
