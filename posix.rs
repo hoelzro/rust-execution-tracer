@@ -176,7 +176,7 @@ fn str_array_to_char_pp<Cb: Fn(*const *const libc::c_char) -> ()>(ary: &[String]
 pub fn exec(command_and_args: &[String]) {
     unsafe {
         let command = ffi::CString::from_slice(command_and_args[0].as_slice().as_bytes());
-        str_array_to_char_pp(command_and_args, |&: args| {
+        str_array_to_char_pp(command_and_args, |args| {
             c::execvp(command.as_ptr(), args);
         });
     }
