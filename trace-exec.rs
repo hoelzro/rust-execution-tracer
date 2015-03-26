@@ -1,4 +1,10 @@
 #![feature(associated_types)]
+#![feature(os)]
+#![feature(libc)]
+#![feature(collections)]
+#![feature(std_misc)]
+#![feature(core)]
+#![feature(int_uint)]
 
 extern crate collections;
 extern crate libc;
