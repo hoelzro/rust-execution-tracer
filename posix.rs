@@ -1,6 +1,7 @@
 extern crate libc;
+use std::io;
 use std::ffi;
-use std::os;
+use std::env;
 use std::ptr;
 use std::str;
 
@@ -27,6 +28,15 @@ pub trait CouldBeAnError {
 pub enum PosixResult {
     PosixOk,
     PosixError(usize),
+}
+
+pub fn errno() -> usize {
+    let err = io::Error::last_os_error();
+
+    match err.raw_os_error() {
+        Some(errno) => errno as usize,
+        None        => panic!("This should never happen!"),
+    }
 }
 
 pub fn strerror(errno: usize) -> String {
@@ -121,7 +131,7 @@ pub fn fork() -> ForkResult {
         let pid = c::fork();
 
         match pid {
-            -1  => ForkResult::ForkFailure(os::errno() as usize),
+            -1  => ForkResult::ForkFailure(errno()),
             0   => ForkResult::ForkChild,
             pid => ForkResult::ForkParent(pid as isize),
         }
@@ -135,7 +145,7 @@ pub fn waitpid(pid: isize, flags: isize) -> WaitPidResult {
         let pid = c::waitpid(pid as libc::pid_t, &mut status as *mut libc::c_int, flags as libc::c_int);
 
         if pid == -1 {
-            WaitPidResult::WaitPidFailure(os::errno() as usize)
+            WaitPidResult::WaitPidFailure(errno())
         } else {
             WaitPidResult::WaitPidSuccess(pid as isize, status as isize)
         }
@@ -191,7 +201,7 @@ pub fn exit(status: isize) -> ! {
 pub fn kill(pid: isize, signum: isize) -> PosixResult {
     unsafe {
         match c::kill(pid as libc::pid_t, signum as libc::c_int) {
-            -1 => PosixResult::PosixError(os::errno() as usize),
+            -1 => PosixResult::PosixError(errno()),
             _  => PosixResult::PosixOk,
         }
     }

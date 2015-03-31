@@ -11,7 +11,7 @@ extern crate libc;
 use ptrace::Word;
 use posix::CouldBeAnError; // needed for impl below
 
-use std::os;
+use std::env;
 use std::str;
 use std::mem;
 use std::collections::hash_set::HashSet as HashSet;
@@ -213,7 +213,7 @@ fn main() {
 
     match result {
         posix::ForkResult::ForkChild => {
-            let args   = os::args();
+            let args   = env::args();
             let result = ptrace::trace_me();
 
             if result.is_error() {

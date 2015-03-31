@@ -2,7 +2,7 @@ extern crate libc;
 
 use posix::CouldBeAnError;
 use std::mem;
-use std::os;
+use std::env;
 use std::ptr;
 
 use posix;
@@ -86,7 +86,7 @@ pub struct UserRegs {
 
 fn to_ptrace_result(return_value: libc::c_long) -> PtraceResult {
     match return_value {
-        -1 => PtraceResult::PtraceError(os::errno() as usize),
+        -1 => PtraceResult::PtraceError(posix::errno()),
         _  => PtraceResult::PtraceOk,
     }
 }
@@ -146,7 +146,7 @@ pub fn get_registers(pid: isize) -> Result<UserRegs, usize> {
         let result = c::ptrace(GETREGS, pid as libc::pid_t, ptr::null(), mem::transmute(&registers));
 
         if result == -1 {
-            Err(os::errno() as usize)
+            Err(posix::errno())
         } else {
             Ok(registers)
         }
@@ -158,7 +158,7 @@ pub fn peektext(pid: isize, addr: *const libc::c_void) -> Result<Word, usize> {
         let result = c::ptrace(PEEKTEXT, pid as libc::pid_t, addr, ptr::null());
 
         if result == -1 {
-            let errno = os::errno() as usize;
+            let errno = posix::errno();
 
             if errno != 0 {
                 Err(errno)
