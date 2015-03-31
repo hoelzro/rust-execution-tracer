@@ -5,6 +5,7 @@
 #![feature(std_misc)]
 #![feature(core)]
 #![feature(int_uint)]
+#![feature(slice_patterns)]
 
 extern crate collections;
 extern crate libc;
