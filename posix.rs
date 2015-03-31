@@ -21,15 +21,15 @@ mod c {
 pub trait CouldBeAnError {
     fn is_error(&self) -> bool;
     fn get_error_as_string(&self) -> String;
-    fn get_errno(&self) -> uint;
+    fn get_errno(&self) -> usize;
 }
 
 pub enum PosixResult {
     PosixOk,
-    PosixError(uint),
+    PosixError(usize),
 }
 
-pub fn strerror(errno: uint) -> String {
+pub fn strerror(errno: usize) -> String {
     unsafe {
         let c_error = c::strerror(errno as libc::c_uint);
         str::from_utf8_unchecked(ffi::c_str_to_bytes(&c_error)).to_string()
@@ -51,7 +51,7 @@ impl CouldBeAnError for PosixResult {
         }
     }
 
-    fn get_errno(&self) -> uint {
+    fn get_errno(&self) -> usize {
         match *self {
             PosixResult::PosixOk           => panic!("You can't get an errno from a success value!"),
             PosixResult::PosixError(errno) => errno,
@@ -60,9 +60,9 @@ impl CouldBeAnError for PosixResult {
 }
 
 pub enum ForkResult {
-    ForkFailure(uint),
+    ForkFailure(usize),
     ForkChild,
-    ForkParent(int),
+    ForkParent(isize),
 }
 
 impl CouldBeAnError for ForkResult {
@@ -80,7 +80,7 @@ impl CouldBeAnError for ForkResult {
         }
     }
 
-    fn get_errno(&self) -> uint {
+    fn get_errno(&self) -> usize {
         match *self {
             ForkResult::ForkFailure(errno) => errno,
             _                              => panic!("You can't get an errno from a success value!"),
@@ -89,8 +89,8 @@ impl CouldBeAnError for ForkResult {
 }
 
 pub enum WaitPidResult {
-    WaitPidFailure(uint),
-    WaitPidSuccess(int, int),
+    WaitPidFailure(usize),
+    WaitPidSuccess(isize, isize),
 }
 
 impl CouldBeAnError for WaitPidResult {
@@ -108,7 +108,7 @@ impl CouldBeAnError for WaitPidResult {
         }
     }
 
-    fn get_errno(&self) -> uint {
+    fn get_errno(&self) -> usize {
         match *self {
             WaitPidResult::WaitPidFailure(errno) => errno,
             _                                    => panic!("You can't get an errno from a success value!"),
@@ -121,23 +121,23 @@ pub fn fork() -> ForkResult {
         let pid = c::fork();
 
         match pid {
-            -1  => ForkResult::ForkFailure(os::errno() as uint),
+            -1  => ForkResult::ForkFailure(os::errno() as usize),
             0   => ForkResult::ForkChild,
-            pid => ForkResult::ForkParent(pid as int),
+            pid => ForkResult::ForkParent(pid as isize),
         }
     }
 }
 
-pub fn waitpid(pid: int, flags: int) -> WaitPidResult {
+pub fn waitpid(pid: isize, flags: isize) -> WaitPidResult {
     unsafe {
         let mut status : libc::c_int = 0;
 
         let pid = c::waitpid(pid as libc::pid_t, &mut status as *mut libc::c_int, flags as libc::c_int);
 
         if pid == -1 {
-            WaitPidResult::WaitPidFailure(os::errno() as uint)
+            WaitPidResult::WaitPidFailure(os::errno() as usize)
         } else {
-            WaitPidResult::WaitPidSuccess(pid as int, status as int)
+            WaitPidResult::WaitPidSuccess(pid as isize, status as isize)
         }
     }
 }
@@ -182,20 +182,20 @@ pub fn exec(command_and_args: &[String]) {
     }
 }
 
-pub fn exit(status: int) -> ! {
+pub fn exit(status: isize) -> ! {
     unsafe {
         c::exit(status as libc::c_int)
     }
 }
 
-pub fn kill(pid: int, signum: int) -> PosixResult {
+pub fn kill(pid: isize, signum: isize) -> PosixResult {
     unsafe {
         match c::kill(pid as libc::pid_t, signum as libc::c_int) {
-            -1 => PosixResult::PosixError(os::errno() as uint),
+            -1 => PosixResult::PosixError(os::errno() as usize),
             _  => PosixResult::PosixOk,
         }
     }
 }
 
-pub static SIGTRAP : int = 5;
-pub static SIGKILL : int = 9;
+pub static SIGTRAP : isize = 5;
+pub static SIGKILL : isize = 9;

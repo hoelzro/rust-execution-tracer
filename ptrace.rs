@@ -17,7 +17,7 @@ mod c {
 
 pub enum PtraceResult {
     PtraceOk,
-    PtraceError(uint),
+    PtraceError(usize),
 }
 
 impl CouldBeAnError for PtraceResult {
@@ -35,7 +35,7 @@ impl CouldBeAnError for PtraceResult {
         }
     }
 
-    fn get_errno(&self) -> uint {
+    fn get_errno(&self) -> usize {
         match *self {
             PtraceResult::PtraceError(errno) => errno,
             _                                => panic!("You can't get an errno from a success value!"),
@@ -86,7 +86,7 @@ pub struct UserRegs {
 
 fn to_ptrace_result(return_value: libc::c_long) -> PtraceResult {
     match return_value {
-        -1 => PtraceResult::PtraceError(os::errno() as uint),
+        -1 => PtraceResult::PtraceError(os::errno() as usize),
         _  => PtraceResult::PtraceOk,
     }
 }
@@ -97,20 +97,20 @@ pub fn trace_me() -> PtraceResult {
     }
 }
 
-pub fn setoptions(pid: int, options: int) -> PtraceResult {
+pub fn setoptions(pid: isize, options: isize) -> PtraceResult {
     unsafe {
         to_ptrace_result(c::ptrace(SETOPTIONS, pid as libc::pid_t, ptr::null(), options as *const libc::c_void))
     }
 }
 
-pub fn syscall(pid: int) -> PtraceResult {
+pub fn syscall(pid: isize) -> PtraceResult {
     unsafe {
         to_ptrace_result(c::ptrace(SYSCALL, pid as libc::pid_t, ptr::null(), ptr::null()))
     }
 }
 
-// XXX this should probably return Result<~UserRegs, uint>
-pub fn get_registers(pid: int) -> Result<UserRegs, uint> {
+// XXX this should probably return Result<~UserRegs, usize>
+pub fn get_registers(pid: isize) -> Result<UserRegs, usize> {
     unsafe {
         // XXX is there a better way to do this?
         let registers = UserRegs {
@@ -146,19 +146,19 @@ pub fn get_registers(pid: int) -> Result<UserRegs, uint> {
         let result = c::ptrace(GETREGS, pid as libc::pid_t, ptr::null(), mem::transmute(&registers));
 
         if result == -1 {
-            Err(os::errno() as uint)
+            Err(os::errno() as usize)
         } else {
             Ok(registers)
         }
     }
 }
 
-pub fn peektext(pid: int, addr: *const libc::c_void) -> Result<Word, uint> {
+pub fn peektext(pid: isize, addr: *const libc::c_void) -> Result<Word, usize> {
     unsafe {
         let result = c::ptrace(PEEKTEXT, pid as libc::pid_t, addr, ptr::null());
 
         if result == -1 {
-            let errno = os::errno() as uint;
+            let errno = os::errno() as usize;
 
             if errno != 0 {
                 Err(errno)
@@ -171,9 +171,9 @@ pub fn peektext(pid: int, addr: *const libc::c_void) -> Result<Word, uint> {
     }
 }
 
-pub const TRACESYSGOOD : int = 0x00000001;
-pub const TRACEFORK    : int = 0x00000002;
-pub const TRACEEXEC    : int = 0x00000010;
+pub const TRACESYSGOOD : isize = 0x00000001;
+pub const TRACEFORK    : isize = 0x00000002;
+pub const TRACEEXEC    : isize = 0x00000010;
 
 pub mod syscall {
     pub const EXECVE : super::Word = 59;

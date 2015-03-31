@@ -28,7 +28,7 @@ enum TraceEvent {
 
 enum TraceResult {
     TraceOk,
-    TraceError(uint),
+    TraceError(usize),
 }
 
 impl CouldBeAnError for TraceResult {
@@ -46,7 +46,7 @@ impl CouldBeAnError for TraceResult {
         }
     }
 
-    fn get_errno(&self) -> uint {
+    fn get_errno(&self) -> usize {
         match *self {
             TraceResult::TraceError(errno) => errno,
             _                              => panic!("You can't get an errno from a success value!"),
@@ -62,7 +62,7 @@ fn wrap_result<T: CouldBeAnError>(result: T) -> TraceResult {
     }
 }
 
-fn init_trace(child_pid: int) -> TraceResult {
+fn init_trace(child_pid: isize) -> TraceResult {
     match posix::waitpid(child_pid, 0) {
         posix::WaitPidResult::WaitPidFailure(errno)       => TraceResult::TraceError(errno),
         posix::WaitPidResult::WaitPidSuccess(pid, status) => {
@@ -79,18 +79,18 @@ fn init_trace(child_pid: int) -> TraceResult {
     }
 }
 
-fn resume_trace(child_pid: int) -> TraceResult {
+fn resume_trace(child_pid: isize) -> TraceResult {
     wrap_result(ptrace::syscall(child_pid))
 }
 
 struct TraceIterator {
-    previous_pid: int
+    previous_pid: isize
 }
 
 impl Iterator for TraceIterator {
-    type Item = (int, TraceEvent);
+    type Item = (isize, TraceEvent);
 
-    fn next(&mut self) -> Option<(int, TraceEvent)> {
+    fn next(&mut self) -> Option<(isize, TraceEvent)> {
         if self.previous_pid != -1 {
             resume_trace(self.previous_pid);
         }
@@ -123,7 +123,7 @@ fn next_trace() -> TraceIterator {
     }
 }
 
-fn pstrdup(pid: int, addr: *const libc::c_void) -> String {
+fn pstrdup(pid: isize, addr: *const libc::c_void) -> String {
     let mut bytes    = vec![];
     let mut mut_addr = addr as Word;
 
@@ -155,7 +155,7 @@ fn pstrdup(pid: int, addr: *const libc::c_void) -> String {
     }.to_string()
 }
 
-fn get_program_args(pid: int, addr: *const libc::c_void) -> Vec<String> {
+fn get_program_args(pid: isize, addr: *const libc::c_void) -> Vec<String> {
     let mut args     = vec![];
     let mut mut_addr = addr as Word;
 
@@ -173,20 +173,20 @@ fn get_program_args(pid: int, addr: *const libc::c_void) -> Vec<String> {
     args
 }
 
-fn handle_syscall_arguments(pid: int, (_, argv_ptr, _, _, _, _): (Word, Word, Word, Word, Word, Word)) {
+fn handle_syscall_arguments(pid: isize, (_, argv_ptr, _, _, _, _): (Word, Word, Word, Word, Word, Word)) {
     let argv = get_program_args(pid, argv_ptr as *const libc::c_void);
     println!("executable args: '{}'", argv.as_slice().connect(" "));
 }
 
-fn run_parent(child_pid: int) -> TraceResult {
+fn run_parent(child_pid: isize) -> TraceResult {
     let result = init_trace(child_pid);
 
     if result.is_error() {
         return wrap_result(result);
     }
 
-    let mut awaiting_return        : HashSet<int> = HashSet::new();
-    let mut seen_first_exec_return : HashSet<int> = HashSet::new();
+    let mut awaiting_return        : HashSet<isize> = HashSet::new();
+    let mut seen_first_exec_return : HashSet<isize> = HashSet::new();
 
     for (pid, event) in next_trace() {
         match event {
