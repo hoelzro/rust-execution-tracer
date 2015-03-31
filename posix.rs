@@ -1,4 +1,5 @@
 extern crate libc;
+use std::convert;
 use std::io;
 use std::ffi;
 use std::ptr;
@@ -41,7 +42,7 @@ pub fn errno() -> usize {
 pub fn strerror(errno: usize) -> String {
     unsafe {
         let c_error = c::strerror(errno as libc::c_uint);
-        str::from_utf8_unchecked(ffi::c_str_to_bytes(&c_error)).to_string()
+        str::from_utf8_unchecked(ffi::CStr::from_ptr(c_error).to_bytes()).to_string()
     }
 }
 
@@ -160,7 +161,10 @@ fn str_array_to_char_pp<Cb: Fn(*const *const libc::c_char) -> ()>(ary: &[String]
                 callback(ptrs.as_ptr());
             },
             [ref head, tail..] => {
-                let raw_str = ffi::CString::from_slice(head.as_slice().as_bytes());
+                let raw_str = match ffi::CString::new(convert::AsRef::<str>::as_ref(head).as_bytes()) {
+                    Ok(raw_str) => raw_str,
+                    Err(_)      => panic!("Unable to create C string"),
+                };
                 unsafe {
                     let copy = c::strdup(raw_str.as_ptr());
                     assert!(!copy.is_null());
@@ -184,7 +188,10 @@ fn str_array_to_char_pp<Cb: Fn(*const *const libc::c_char) -> ()>(ary: &[String]
 
 pub fn exec(command_and_args: &[String]) {
     unsafe {
-        let command = ffi::CString::from_slice(command_and_args[0].as_slice().as_bytes());
+        let command = match ffi::CString::new(convert::AsRef::<str>::as_ref(&command_and_args[0]).as_bytes()) {
+            Ok(command) => command,
+            Err(_)      => panic!("Unable to create C string"),
+        };
         str_array_to_char_pp(command_and_args, |args| {
             c::execvp(command.as_ptr(), args);
         });

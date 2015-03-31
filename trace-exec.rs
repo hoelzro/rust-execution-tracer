@@ -1,8 +1,7 @@
+#![feature(convert)]
 #![feature(io)]
 #![feature(libc)]
 #![feature(collections)]
-#![feature(std_misc)]
-#![feature(core)]
 #![feature(slice_patterns)]
 
 extern crate collections;
@@ -147,7 +146,7 @@ fn pstrdup(pid: isize, addr: *const libc::c_void) -> String {
     }
 
     // XXX this is really a buffer of bytes rather than a string...
-    match str::from_utf8(bytes.slice_from(0)) {
+    match str::from_utf8(&bytes[0..]) {
         Ok(s)  => s.to_string(),
         Err(_) => "".to_string(),
     }.to_string()
@@ -173,7 +172,7 @@ fn get_program_args(pid: isize, addr: *const libc::c_void) -> Vec<String> {
 
 fn handle_syscall_arguments(pid: isize, (_, argv_ptr, _, _, _, _): (Word, Word, Word, Word, Word, Word)) {
     let argv = get_program_args(pid, argv_ptr as *const libc::c_void);
-    println!("executable args: '{}'", argv.as_slice().connect(" "));
+    println!("executable args: '{}'", argv.connect(" "));
 }
 
 fn run_parent(child_pid: isize) -> TraceResult {
