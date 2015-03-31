@@ -1,7 +1,6 @@
 extern crate libc;
 use std::io;
 use std::ffi;
-use std::env;
 use std::ptr;
 use std::str;
 

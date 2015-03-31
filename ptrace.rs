@@ -2,7 +2,6 @@ extern crate libc;
 
 use posix::CouldBeAnError;
 use std::mem;
-use std::env;
 use std::ptr;
 
 use posix;
