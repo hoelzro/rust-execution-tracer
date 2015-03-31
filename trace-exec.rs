@@ -213,7 +213,7 @@ fn main() {
 
     match result {
         posix::ForkResult::ForkChild => {
-            let args   = env::args();
+            let args   = env::args().collect::<Vec<String>>();
             let result = ptrace::trace_me();
 
             if result.is_error() {
