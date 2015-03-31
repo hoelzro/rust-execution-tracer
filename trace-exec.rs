@@ -1,4 +1,4 @@
-#![feature(os)]
+#![feature(io)]
 #![feature(libc)]
 #![feature(collections)]
 #![feature(std_misc)]
